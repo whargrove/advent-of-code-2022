@@ -1,7 +1,5 @@
 use std::{fs::File, io::{BufReader, BufRead}};
 
-use itertools::Itertools;
-
 enum Move {
     Rock,
     Paper,
@@ -12,11 +10,25 @@ impl From<String> for Move {
     fn from(move_str: String) -> Self {
         match move_str.as_str() {
             "A" => Move::Rock,
-            "X" => Move::Rock,
             "B" => Move::Paper,
-            "Y" => Move::Paper,
             "C" => Move::Scissors,
-            "Z" => Move::Scissors,
+            _ => panic!()
+        }
+    }
+}
+
+enum Outcome {
+    Lose,
+    Draw,
+    Win
+}
+
+impl From<String> for Outcome {
+    fn from(outcome_str: String) -> Self {
+        match outcome_str.as_str() {
+            "X" => Outcome::Lose,
+            "Y" => Outcome::Draw,
+            "Z" => Outcome::Win,
             _ => panic!()
         }
     }
@@ -28,10 +40,26 @@ fn main() {
     let sum:i32 = BufReader::new(input).lines()
         .map(|l| l.unwrap())
         .map(|l| {
-            let (theirs, mine) = l.split(" ")
-                .map(|s| s.to_string())
-                .map_into::<Move>()
-                .collect_tuple().unwrap();
+            let mut parts = l.split(" ");
+            let theirs: Move = parts.next().unwrap().to_string().into();
+            let outcome: Outcome = parts.next().unwrap().to_string().into();
+            let mine = match outcome {
+                Outcome::Lose => match theirs {
+                    Move::Rock => Move::Scissors,
+                    Move::Paper => Move::Rock,
+                    Move::Scissors => Move::Paper,
+                },
+                Outcome::Draw => match theirs {
+                    Move::Rock => Move::Rock,
+                    Move::Paper => Move::Paper,
+                    Move::Scissors => Move::Scissors,
+                },
+                Outcome::Win => match theirs {
+                    Move::Rock => Move::Paper,
+                    Move::Paper => Move::Scissors,
+                    Move::Scissors => Move::Rock,
+                },
+            };
             let round_score = match mine {
                 Move::Rock => {
                     match theirs {
@@ -69,5 +97,5 @@ fn main() {
             };
             round_score
         }).sum();
-        print!("Score: {sum}")
+        println!("Score: {sum}")
 }
