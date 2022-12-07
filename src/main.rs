@@ -15,26 +15,38 @@ fn main() {
     }
 
     pretty_env_logger::init();
+
     let input = File::open("./day3-input").unwrap();
     let lines = BufReader::new(input).lines()
         .map(|l|l.unwrap());
+
+    // this vec will contain each rucksack
+    // when the len is 3 we will find the shared items by intersecting all three lines
+    let mut group_buf: Vec<String> = Vec::new();
     let mut shared_items: Vec<char> = Vec::new();
     for rucksack in lines {
-        info!("rucksack contains: {rucksack}");
-        let mut c1_items: HashSet<char> = HashSet::new();
-        let mut c2_items: HashSet<char> = HashSet::new();
-        let midpoint = rucksack.len() / 2; // this is OK because only ASCII
-        for (index, char) in rucksack.char_indices() {
-            if index < midpoint {
-                c1_items.insert(char);
-            } else {
-                c2_items.insert(char);
-            }
+        if group_buf.len() < 3 {
+            group_buf.push(rucksack);
         }
-        info!("c1_items: {:?}", c1_items);
-        info!("c2_items: {:?}", c2_items);
-        for item in c1_items.intersection(&c2_items) {
-            shared_items.push(*item);
+        if group_buf.len() == 3 {
+            let sets: Vec<HashSet<char>> = group_buf.iter()
+                .map(|b| {
+                    let mut s = HashSet::new();
+                    for c in b.chars() {
+                        s.insert(c);
+                    }
+                    s
+                }).collect();
+            let shared = sets.iter()
+                .cloned()
+                .reduce(|accum, item| {
+                    let intersection: HashSet<char> = accum.intersection(&item).into_iter().cloned().collect();
+                    return intersection;
+                }).unwrap();
+            for c in shared {
+                shared_items.push(c);
+            }
+            group_buf.clear();
         }
     }
     let sum:i32 = shared_items.iter()
