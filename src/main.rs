@@ -1,7 +1,6 @@
 use std::{
     fs::File,
     io::{BufRead, BufReader},
-    ops::Range,
 };
 
 use itertools::Itertools;
@@ -17,14 +16,12 @@ fn main() {
                     let mut range_it = range_str.split('-');
                     let start: i32 = range_it.next().unwrap().parse().unwrap();
                     let end: i32 = range_it.next().unwrap().parse().unwrap();
-                    Range { start, end }
+                    start..=end
                 })
                 .next_tuple()
                 .unwrap()
         })
-        .filter(|(r1, r2)| {
-            (r2.start >= r1.start && r2.end <= r1.end) || (r1.start >= r2.start && r1.end <= r2.end)
-        })
+        .filter(|(r1, r2)| r1.end() >= r2.start() && r2.end() >= r1.start())
         .count() as i32;
     println!("{count}");
 }
